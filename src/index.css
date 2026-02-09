@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-ransomware-black text-ransomware-green font-mono overflow-x-hidden min-h-screen;
+    background-image: linear-gradient(rgba(10, 10, 10, 0.4), rgba(10, 10, 10, 0.4)), url('/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+}
+
+.terminal-glow {
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
+}
+
+.red-glitch {
+  @apply text-ransomware-red;
+  text-shadow: 2px 2px 0 rgba(139, 0, 0, 0.8);
+}
