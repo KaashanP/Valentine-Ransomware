@@ -106,6 +106,10 @@ const RansomwareOverlay = ({ unlockedDay, onStartChallenge }) => {
                     {/* Daily Progress Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-2xl w-full px-4">
                         {days.map((day) => {
+                            const isUnlocked = day <= unlockedDay;
+                            const isCompleted = day < unlockedDay;
+                            const isCurrent = day === unlockedDay;
+
                             // Date check for tooltip/label
                             const startDate = new Date('2026-02-09T00:00:00');
                             const challengeDate = new Date(startDate);

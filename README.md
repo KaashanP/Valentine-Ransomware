@@ -1,16 +1,22 @@
-# React + Vite
+# Sentimental Ransomware 💖
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A personalized, state-of-the-art Valentine's Day challenge website.
 
-Currently, two official plugins are available:
+## 🔒 The Scenario
+Access to "Kaashan's Heart" has been revoked. To regain access by February 14th, the user must pass a series of daily verification protocols (Challenges).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Key Features
+- **Ransomware Aesthetic**: High-tech hacker-style UI with glowing effects and terminal fonts.
+- **Date-Gated Challenges**: Challenges unlock automatically based on the real-world date.
+- **Customized Trivia**: 10 personal relationship questions with special failure/success logic.
+- **Dynamic Progress**: Visual progress bar tracking "Emotional Recovery".
+- **Responsive Design**: Optimized for both mobile and desktop.
 
-## React Compiler
+## 🛠 Tech Stack
+- **Framework**: [React](https://reactjs.org/) + [Vite](https://vitejs.dev/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Effects**: `canvas-confetti` and `lucide-react` icons.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🌍 Virtual Deployment
+Ready for 1-click deployment on [Vercel](https://vercel.com) or [Netlify](https://www.netlify.com/).
