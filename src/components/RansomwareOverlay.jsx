@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Lock, AlertTriangle, ShieldAlert, Cpu, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const RansomwareOverlay = ({ unlockedDay, onStartChallenge }) => {
-    const [readyState, setReadyState] = useState('initial'); // 'initial', 'ready', 'emergency'
+const RansomwareOverlay = ({ unlockedDay, onStartChallenge, readyState, setReadyState }) => {
     const days = [1, 2, 3, 4, 5, 6];
 
     // Progress Calculation: 100 / 6 per day. 

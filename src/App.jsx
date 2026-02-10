@@ -11,27 +11,29 @@ const App = () => {
   const [currentDay, setCurrentDay] = useState(1);
   const [unlockedDay, setUnlockedDay] = useState(1);
   const [showChallenge, setShowChallenge] = useState(false);
+  const [readyState, setReadyState] = useState('initial');
 
   useEffect(() => {
     // Date-Gating Logic
-    // Day 1: Feb 9, Day 2: Feb 10, ..., Day 6: Feb 14
     const startDate = new Date('2026-02-09T00:00:00');
     const today = new Date();
 
-    // Calculate how many days have passed since Feb 9
     const diffTime = today - startDate;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
     const maxAvailableDay = Math.min(6, Math.max(1, diffDays));
 
     const savedDay = localStorage.getItem('valentine_ransomware_day');
-    let currentUnlocked = 1;
+    const savedReadyStatus = localStorage.getItem('valentine_ransomware_started');
 
     if (savedDay) {
-      currentUnlocked = parseInt(savedDay);
+      setUnlockedDay(Math.min(parseInt(savedDay), maxAvailableDay));
+    } else {
+      setUnlockedDay(1);
     }
 
-    // You can't be further than the current real-world date allows
-    setUnlockedDay(Math.min(currentUnlocked, maxAvailableDay));
+    if (savedReadyStatus) {
+      setReadyState(savedReadyStatus);
+    }
   }, []);
 
   const handleDayComplete = (day) => {
@@ -39,6 +41,13 @@ const App = () => {
     setUnlockedDay(nextDay);
     localStorage.setItem('valentine_ransomware_day', nextDay.toString());
     setShowChallenge(false);
+  };
+
+  const handleSetReadyState = (state) => {
+    setReadyState(state);
+    if (state === 'ready') {
+      localStorage.setItem('valentine_ransomware_started', 'ready');
+    }
   };
 
   const renderChallenge = () => {
@@ -58,6 +67,8 @@ const App = () => {
       {!showChallenge ? (
         <RansomwareOverlay
           unlockedDay={unlockedDay}
+          readyState={readyState}
+          setReadyState={handleSetReadyState}
           onStartChallenge={(day) => {
             setCurrentDay(day);
             setShowChallenge(true);
