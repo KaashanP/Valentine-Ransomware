@@ -71,12 +71,15 @@ const CelebrationOverlayDay3 = ({ onProceed }) => {
                     </motion.div>
                 </div>
 
-                <div className="space-y-2 mb-8">
+                <div className="space-y-3 mb-8">
                     <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.4em]">Protocol 03: Finalized</p>
                     <h1 className="text-3xl md:text-5xl font-serif italic text-stone-800 tracking-tight leading-tight">
                         Neural Terrarium <br />
                         <span className="font-sans font-light opacity-60 not-italic">is fully stabilized.</span>
                     </h1>
+                    <p className="text-stone-500 font-serif italic text-sm md:text-base opacity-80 pt-2">
+                        Memory regenerated, here is a glimpse as a reward
+                    </p>
                 </div>
 
                 {/* Reward Video - STRICT FORCED PORTRAIT RATIO */}
