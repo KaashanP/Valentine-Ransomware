@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import RansomwareOverlay from './components/RansomwareOverlay';
+import CelebrationOverlayDay3 from './components/challenges/CelebrationOverlayDay3';
 import Day1Challenge from './components/challenges/Day1Challenge';
 import Day2Challenge from './components/challenges/Day2Challenge';
 import Day3Challenge from './components/challenges/Day3Challenge';
@@ -12,6 +13,7 @@ const App = () => {
   const [unlockedDay, setUnlockedDay] = useState(1);
   const [showChallenge, setShowChallenge] = useState(false);
   const [readyState, setReadyState] = useState('initial');
+  const [showDay3Celebration, setShowDay3Celebration] = useState(false);
 
   useEffect(() => {
     // Date-Gating Logic
@@ -37,6 +39,14 @@ const App = () => {
   }, []);
 
   const handleDayComplete = (day) => {
+    if (day === 3) {
+      setShowDay3Celebration(true);
+    } else {
+      finalizeDay(day);
+    }
+  };
+
+  const finalizeDay = (day) => {
     const nextDay = day + 1;
     setUnlockedDay(nextDay);
     localStorage.setItem('valentine_ransomware_day', nextDay.toString());
@@ -51,6 +61,17 @@ const App = () => {
   };
 
   const renderChallenge = () => {
+    if (showDay3Celebration) {
+      return (
+        <CelebrationOverlayDay3
+          onProceed={() => {
+            setShowDay3Celebration(false);
+            finalizeDay(3);
+          }}
+        />
+      );
+    }
+
     switch (currentDay) {
       case 1: return <Day1Challenge onComplete={() => handleDayComplete(1)} />;
       case 2: return <Day2Challenge onComplete={() => handleDayComplete(2)} />;
@@ -61,9 +82,8 @@ const App = () => {
       default: return null;
     }
   };
-
   return (
-    <div className="min-h-screen text-green-500 font-mono relative overflow-hidden">
+    <div className="min-h-screen text-green-500 font-mono relative overflow-x-hidden p-4 md:p-8 flex items-center justify-center">
       {!showChallenge ? (
         <RansomwareOverlay
           unlockedDay={unlockedDay}
@@ -75,12 +95,12 @@ const App = () => {
           }}
         />
       ) : (
-        <div className="container mx-auto p-4 z-10 relative">
+        <div className="w-full max-w-6xl z-10 relative">
           <button
             onClick={() => setShowChallenge(false)}
-            className="mb-8 text-red-500 hover:text-white transition-colors flex items-center gap-2"
+            className="mb-8 text-red-500 hover:text-white transition-colors flex items-center gap-2 font-black text-xs tracking-widest"
           >
-            <span>&larr;</span> EXIT CHALLENGE
+            <span>&larr;</span> EXIT PROTOCOL
           </button>
           {renderChallenge()}
         </div>
