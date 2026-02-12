@@ -1,61 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Bomb, CheckCircle, XCircle, Timer, AlertTriangle, Play, Volume2 } from 'lucide-react';
+import { CheckCircle, Timer } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 const MEMORY_COUNT = 10;
-const INITIAL_TIME = 45; // High pressure: 45 seconds
+const INITIAL_TIME = 45;
 
 const MEMORY_DATA = [
-    {
-        options: ["MSTM Gala Night Afterparty", "Underground (Chicago)", "Kams Bollywood Night", "Last time we went to Kams"],
-        correct: 3
-    },
-    {
-        options: ["Panshul and Me", "Aryan and Me", "First time I met Sasurji", "2 random strangers from my gallery"],
-        correct: 2
-    },
-    {
-        options: ["Independence Day 23'", "Diwali 24'", "Diwali 23'", "Republic Day 24'"],
-        correct: 1
-    },
-    {
-        options: ["Halloween painting", "Ganesh Chaturthi 24'", "Navratri 23'", "NPD"],
-        correct: 3
-    },
-    {
-        options: ["Michigan Airbnb", "Prerna's house", "Sanjana's House", "Ishu's house"],
-        correct: 0
-    },
-    {
-        options: ["Our Graduation", "Basketball", "Football Match", "Aryan's Graduation"],
-        correct: 1
-    },
-    {
-        options: ["Canvas painting in Ike", "Picnic in Japan House", "Random day outside Gies", "Halloween 23'"],
-        correct: 3
-    },
-    {
-        options: ["NPD", "Thanksgiving 23'", "Navratri 23'", "Ganesh Chaturthi 24'"],
-        correct: 2
-    },
-    {
-        options: ["Your random image from before we met", "Jaeger in Murphy's", "Wine and Wings date night", "Last time we went to Murphy's"],
-        correct: 1
-    },
-    {
-        options: ["Last time we went to Oozu", "Marufuku in SF", "Kaashu's bday dinner", "Sticky Rice"],
-        correct: 2
-    }
+    { options: ["MSTM Gala Night Afterparty", "Underground (Chicago)", "Kams Bollywood Night", "Last time we went to Kams"], correct: 3 },
+    { options: ["Panshul and Me", "Aryan and Me", "First time I met Sasurji", "2 random strangers from my gallery"], correct: 2 },
+    { options: ["Independence Day 23'", "Diwali 24'", "Diwali 23'", "Republic Day 24'"], correct: 1 },
+    { options: ["Halloween painting", "Ganesh Chaturthi 24'", "Navratri 23'", "NPD"], correct: 3 },
+    { options: ["Michigan Airbnb", "Prerna's house", "Sanjana's House", "Ishu's house"], correct: 0 },
+    { options: ["Our Graduation", "Basketball", "Football Match", "Aryan's Graduation"], correct: 1 },
+    { options: ["Canvas painting in Ike", "Picnic in Japan House", "Random day outside Gies", "Halloween 23'"], correct: 3 },
+    { options: ["NPD", "Thanksgiving 23'", "Navratri 23'", "Ganesh Chaturthi 24'"], correct: 2 },
+    { options: ["Your random image from before we met", "Jaeger in Murphy's", "Wine and Wings date night", "Last time we went to Murphy's"], correct: 1 },
+    { options: ["Last time we went to Oozu", "Marufuku in SF", "Kaashu's bday dinner", "Sticky Rice"], correct: 2 }
 ];
 
 const Day4Challenge = ({ onComplete }) => {
     const [currentIdx, setCurrentIdx] = useState(0);
     const [timeLeft, setLeft] = useState(INITIAL_TIME);
     const [score, setScore] = useState(0);
-    const [status, setStatus] = useState('active'); // 'active', 'correct', 'exploded', 'shattering', 'finished'
-    const [showRedScreen, setShowRedScreen] = useState(false);
+    const [status, setStatus] = useState('active'); // 'active', 'correct', 'shattering', 'exploded', 'finished'
     const [revealFull, setRevealFull] = useState(false);
+    const [showBlood, setShowBlood] = useState(false);
 
     const memories = MEMORY_DATA.map((data, i) => ({
         ...data,
@@ -65,11 +35,10 @@ const Day4Challenge = ({ onComplete }) => {
         isTypeVideo: i === 8
     }));
 
-    // Timer Logic
     useEffect(() => {
         if (status !== 'active') return;
         if (timeLeft <= 0) {
-            handleAnswer(-1); // Auto-fail on timeout
+            handleAnswer(-1);
             return;
         }
         const timer = setInterval(() => setLeft(prev => prev - 1), 1000);
@@ -78,7 +47,6 @@ const Day4Challenge = ({ onComplete }) => {
 
     const handleAnswer = (choiceIdx) => {
         if (status !== 'active') return;
-
         const isCorrect = choiceIdx === memories[currentIdx].correct;
 
         if (isCorrect) {
@@ -91,20 +59,16 @@ const Day4Challenge = ({ onComplete }) => {
                 origin: { y: 0.6 },
                 colors: ['#4ade80', '#ffffff']
             });
-            setTimeout(nextStage, 4000);
+            setTimeout(nextStage, 3000);
         } else {
             setStatus('shattering');
             setRevealFull(true);
-
-            // Wait for shatter animation to "peak"
             setTimeout(() => {
-                setShowRedScreen(true);
+                setShowBlood(true);
                 setStatus('exploded');
-            }, 1000);
-
-            // Wait for red screen duration
+            }, 800);
             setTimeout(() => {
-                setShowRedScreen(false);
+                setShowBlood(false);
                 nextStage();
             }, 4000);
         }
@@ -127,237 +91,184 @@ const Day4Challenge = ({ onComplete }) => {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const currentMemory = memories[currentIdx];
-
     if (status === 'finished') {
         const passed = score >= 8;
         return (
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="max-w-2xl mx-auto p-12 bg-black border-4 border-stone-800 rounded-[3rem] text-center shadow-[0_0_100px_rgba(255,255,255,0.05)]"
-            >
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto p-12 bg-black border-4 border-stone-950 rounded-[3rem] text-center shadow-2xl">
                 <h2 className="text-5xl font-serif italic text-white mb-6">Recall Synthesis</h2>
-                <div className="text-9xl font-black text-white mb-8 border-y-2 border-stone-900 py-10 tracking-tighter">
-                    {score}<span className="text-3xl text-stone-600 block">/ 10</span>
-                </div>
-                <p className="text-stone-400 mb-12 text-lg font-medium">
-                    {passed
-                        ? "Neural integrity preserved. Your memories are safe."
-                        : "Critical data loss. Your bond is fractured. Re-upload required."}
-                </p>
-                {passed ? (
-                    <button
-                        onClick={onComplete}
-                        className="w-full py-6 bg-white text-black font-black uppercase tracking-[0.3em] rounded-full hover:bg-stone-200 transition-all shadow-[0_20px_50px_rgba(255,255,255,0.1)]"
-                    >
-                        Initialize Protocol 05
-                    </button>
-                ) : (
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="w-full py-6 bg-red-600 text-white font-black uppercase tracking-[0.3em] rounded-full hover:bg-red-500 transition-all shadow-[0_20px_50px_rgba(220,38,38,0.2)]"
-                    >
-                        Retry Synthesis
-                    </button>
-                )}
+                <div className="text-9xl font-black text-white mb-8 border-y border-stone-900 py-10">{score}/10</div>
+                <p className="text-stone-500 mb-12 text-lg">{passed ? "Neural integrity preserved." : "Critical data loss."}</p>
+                <button onClick={passed ? onComplete : () => window.location.reload()} className={`w-full py-6 font-black uppercase tracking-[0.3em] rounded-full transition-all ${passed ? 'bg-white text-black' : 'bg-red-900 text-white'}`}>
+                    {passed ? "Unlock Protocol 05" : "Retry Matrix"}
+                </button>
             </motion.div>
         );
     }
 
+    const currentMemory = memories[currentIdx];
+
     return (
-        <div className="relative min-h-screen flex items-center justify-center p-4">
-            {/* Full Screen Red Failure Overlay */}
+        <div className="relative min-h-screen flex items-center justify-center p-4 bg-[#050505]">
+            {/* Blood Splash Overlay */}
             <AnimatePresence>
-                {showRedScreen && (
-                    <motion.div
-                        initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-                        animate={{ opacity: 1, backdropFilter: 'blur(20px)' }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[200] bg-red-600 flex flex-col items-center justify-center text-white"
-                    >
-                        <motion.div
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="text-center"
+                {showBlood && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm pointer-events-none">
+                        {/* Blood Splatter SVG */}
+                        <svg className="absolute inset-0 w-full h-full text-red-700/80 filter blur-sm" viewBox="0 0 800 600">
+                            <motion.path
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                d="M400,300 C450,250 550,250 600,300 C650,350 550,450 400,500 C250,450 150,350 200,300 C250,250 350,250 400,300"
+                                fill="currentColor"
+                                className="origin-center"
+                            />
+                            {/* Random splats */}
+                            {[...Array(20)].map((_, i) => (
+                                <motion.circle
+                                    key={i}
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: Math.random() * 2 + 1, x: (Math.random() - 0.5) * 800, y: (Math.random() - 0.5) * 600 }}
+                                    cx="400" cy="300" r={Math.random() * 20 + 5}
+                                    fill="currentColor"
+                                />
+                            ))}
+                        </svg>
+                        <motion.h2
+                            initial={{ scale: 0.5, opacity: 0 }}
+                            animate={{ scale: 1.2, opacity: 1 }}
+                            className="relative z-[210] text-7xl md:text-9xl font-black text-red-600 uppercase tracking-tighter drop-shadow-[0_0_20px_rgba(220,38,38,0.5)]"
                         >
-                            <Bomb className="w-32 h-32 mb-8 mx-auto animate-bounce text-white fill-white/20" />
-                            <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter mb-4">Memory Destroyed</h2>
-                            <p className="text-white/60 font-mono tracking-[0.5em] uppercase">Critical System Failure</p>
-                        </motion.div>
+                            Memory Destroyed
+                        </motion.h2>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            <motion.div
-                animate={status === 'shattering' ? { x: [-20, 20, -20, 20, 0], transition: { duration: 0.1, repeat: 10 } } : {}}
-                className="w-full max-w-7xl"
-            >
-                {/* HUD Header */}
-                <div className="flex justify-between items-center mb-10 border-b border-stone-800 pb-8 px-4">
-                    <div className="flex flex-col">
-                        <span className="text-[12px] text-stone-500 font-bold uppercase tracking-[0.4em]">Protocol 04 // Recall Matrix</span>
-                        <h2 className="text-white font-serif italic text-4xl">Segment {currentIdx + 1}<span className="text-stone-700 not-italic font-sans text-xl ml-4">/ 10</span></h2>
-                    </div>
-                </div>
+            <div className="w-full max-w-7xl">
+                <div className="grid lg:grid-cols-[1fr,480px] gap-12 items-stretch min-h-[650px]">
 
-                <div className="grid lg:grid-cols-[1fr,450px] gap-16 items-center">
-                    {/* THE TIME BOMB CONTAINER */}
-                    <div className="relative flex items-center justify-center py-12">
-                        {/* Dynamite Sticks (Stylized Background) */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 -z-10 opacity-80 scale-110 rotate-3">
-                            <div className="flex gap-1">
-                                {[1, 2, 3, 4, 5].map(i => (
-                                    <div key={i} className="w-10 h-[500px] bg-red-700 rounded-full border-b-8 border-black/40 shadow-inner relative overflow-hidden">
-                                        <div className="absolute inset-0 bg-gradient-to-r from-red-600/50 via-transparent to-red-900/50" />
-                                    </div>
-                                ))}
-                            </div>
-                            {/* Duct Tape Straps */}
-                            <div className="absolute top-1/4 left-0 right-0 h-16 bg-stone-800/90 shadow-2xl backdrop-blur-sm -rotate-1" />
-                            <div className="absolute bottom-1/4 left-0 right-0 h-16 bg-stone-800/90 shadow-2xl backdrop-blur-sm rotate-1" />
-                        </div>
+                    {/* THE REALISTIC TIME BOMB */}
+                    <div className="relative flex flex-col items-center justify-center p-8 bg-[#0a0a0a] rounded-[3.5rem] border-2 border-stone-900 shadow-inner">
+                        <div className="relative w-full max-w-[550px] flex items-center justify-center">
 
-                        {/* Central Bomb Panel */}
-                        <div className="relative w-full max-w-[500px] bg-[#151515] border-8 border-stone-800 rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.8)] overflow-hidden">
-                            {/* Digital Timer Panel */}
-                            <div className="bg-black p-4 border-b-4 border-stone-900 flex justify-center items-center gap-4">
-                                <div className={`
-                                    text-6xl font-black font-mono tracking-tighter px-6 py-2 rounded-lg border-2
-                                    ${status === 'correct' ? 'text-green-500 border-green-500/20' :
-                                        status === 'shattering' || timeLeft < 15 ? 'text-red-600 border-red-600/20 animate-pulse' : 'text-red-500 border-red-900'}
-                                `}>
-                                    {status === 'correct' ? 'DISARMED' : formatTime(timeLeft)}
+                            {/* Dynamite Sticks Bundle */}
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 -z-10">
+                                <div className="flex gap-1.5 rotate-90 scale-x-125">
+                                    {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                                        <div key={i} className="w-12 h-[550px] bg-red-800 rounded-full border-b-[12px] border-black/50 relative overflow-hidden shadow-2xl">
+                                            <div className="absolute inset-0 bg-gradient-to-r from-red-600/30 via-transparent to-black/40" />
+                                            <div className="absolute top-1/2 left-0 right-0 h-2 bg-black/10" />
+                                        </div>
+                                    ))}
                                 </div>
+                                {/* Duct Tape Straps */}
+                                <div className="absolute top-1/4 w-[120%] h-20 bg-stone-900 shadow-2xl -rotate-2 border-y border-stone-800" />
+                                <div className="absolute bottom-1/4 w-[120%] h-20 bg-stone-900 shadow-2xl rotate-2 border-y border-stone-800" />
                             </div>
 
-                            {/* Image Core (The Fragment) */}
-                            <div className="relative aspect-auto min-h-[400px] flex items-center justify-center bg-[#050505]">
-                                <AnimatePresence mode="wait">
-                                    <motion.div
-                                        key={`${currentIdx}-${revealFull}`}
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        className="w-full h-full flex items-center justify-center p-2"
-                                    >
-                                        {currentMemory.isTypeVideo && revealFull ? (
-                                            <video
-                                                src={currentMemory.full}
-                                                autoPlay
-                                                className="w-full h-full object-contain rounded-2xl"
-                                            />
-                                        ) : (
-                                            <div className="relative overflow-hidden w-full h-full flex items-center justify-center">
-                                                {/* Shatter Fragments Effect */}
-                                                {status === 'shattering' && (
-                                                    <div className="absolute inset-0 z-50 grid grid-cols-4 grid-rows-4 pointer-events-none">
-                                                        {Array.from({ length: 16 }).map((_, i) => (
-                                                            <motion.div
-                                                                key={i}
-                                                                initial={{ scale: 1, opacity: 1 }}
-                                                                animate={{
-                                                                    scale: 0,
-                                                                    opacity: 0,
-                                                                    rotate: Math.random() * 360,
-                                                                    x: (Math.random() - 0.5) * 500,
-                                                                    y: (Math.random() - 0.5) * 500
-                                                                }}
-                                                                transition={{ duration: 1, ease: 'easeOut' }}
-                                                                className="bg-stone-900 border border-white/10"
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                )}
+                            {/* Electronic Control Box */}
+                            <motion.div
+                                animate={status === 'shattering' ? { x: [-15, 15, -15, 15, 0], transition: { duration: 0.08, repeat: 10 } } : {}}
+                                className="relative w-full bg-[#1A1A1A] border-[10px] border-[#2A2A2A] rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,1)] overflow-hidden"
+                            >
+                                {/* LCD Timer Panel */}
+                                <div className="bg-black py-6 border-b-[6px] border-[#111] flex flex-col items-center">
+                                    <div className="text-[10px] font-black text-stone-600 uppercase tracking-[0.4em] mb-3">T-Minus / Seg {currentIdx + 1}</div>
+                                    <div className={`
+                                        text-7xl font-mono font-black tracking-tighter px-10 py-2 border-4 rounded-xl
+                                        ${status === 'correct' ? 'text-green-500 border-green-500/20' :
+                                            timeLeft < 15 ? 'text-red-600 border-red-600 animate-pulse' : 'text-red-500 border-red-900/50'}
+                                    `}>
+                                        {status === 'correct' ? 'DISARMED' : formatTime(timeLeft)}
+                                    </div>
+                                </div>
 
-                                                <motion.img
-                                                    animate={{
-                                                        filter: status === 'exploded' ? 'grayscale(1) brightness(0)' : 'none',
-                                                        scale: status === 'shattering' ? 1.1 : 1
-                                                    }}
-                                                    src={revealFull ? currentMemory.full : currentMemory.cropped}
-                                                    alt="Memory Fragment"
-                                                    className="max-h-[600px] w-auto h-auto object-contain rounded-2xl"
-                                                />
-                                            </div>
-                                        )}
-                                    </motion.div>
-                                </AnimatePresence>
-
-                                {/* Success Overlay */}
-                                <AnimatePresence>
-                                    {status === 'correct' && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 100 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="absolute inset-x-0 bottom-0 bg-green-500 py-6 text-black font-black uppercase text-center tracking-[0.5em] z-30"
-                                        >
-                                            Memory Saved
+                                {/* Memory Visual Core */}
+                                <div className="relative aspect-auto min-h-[420px] bg-black flex items-center justify-center p-2">
+                                    <AnimatePresence mode="wait">
+                                        <motion.div key={`${currentIdx}-${revealFull}`} className="w-full h-full flex items-center justify-center">
+                                            {currentMemory.isTypeVideo && revealFull ? (
+                                                <video src={currentMemory.full} autoPlay className="max-h-[500px] w-auto h-auto object-contain rounded-xl shadow-2xl" />
+                                            ) : (
+                                                <div className="relative overflow-hidden w-full h-full flex items-center justify-center">
+                                                    {/* Enhanced Shatter Effect */}
+                                                    {status === 'shattering' && (
+                                                        <div className="absolute inset-0 z-50 grid grid-cols-6 grid-rows-6">
+                                                            {Array.from({ length: 36 }).map((_, i) => (
+                                                                <motion.div
+                                                                    key={i}
+                                                                    initial={{ scale: 1, opacity: 1 }}
+                                                                    animate={{
+                                                                        scale: [1, 2, 0],
+                                                                        opacity: [1, 1, 0],
+                                                                        rotate: Math.random() * 720,
+                                                                        x: (Math.random() - 0.5) * 1000,
+                                                                        y: (Math.random() - 0.5) * 1000
+                                                                    }}
+                                                                    transition={{ duration: 1.2, ease: 'backOut' }}
+                                                                    className="bg-stone-950 border border-white/5 shadow-2xl"
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                    <motion.img
+                                                        animate={{
+                                                            filter: status === 'exploded' ? 'brightness(0)' : 'none',
+                                                            scale: status === 'shattering' ? 1.2 : 1
+                                                        }}
+                                                        src={revealFull ? currentMemory.full : currentMemory.cropped}
+                                                        alt="Memory"
+                                                        className="max-h-[550px] w-auto h-auto object-contain rounded-xl p-4"
+                                                    />
+                                                </div>
+                                            )}
                                         </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
+                                    </AnimatePresence>
+                                </div>
+                            </motion.div>
                         </div>
                     </div>
 
-                    {/* OPTIONS SIDEBAR */}
-                    <div className="flex flex-col gap-6">
-                        <div className="mb-4">
-                            <h3 className="text-stone-500 text-[10px] font-black uppercase tracking-[0.5em] mb-4 text-center lg:text-left underline decoration-stone-800 underline-offset-8">Select Neural Key</h3>
+                    {/* OPTIONS AREA (Solid Black Background) */}
+                    <div className="bg-black p-10 rounded-[3.5rem] border-2 border-stone-900 flex flex-col justify-center">
+                        <div className="mb-10 flex items-center justify-between">
+                            <h3 className="text-white font-black text-xs uppercase tracking-[0.6em]">Select Neural Key</h3>
+                            <div className="text-stone-700 font-mono text-[10px]">{score}/10 Saved</div>
                         </div>
 
                         <div className="space-y-4">
                             {currentMemory.options.map((option, i) => (
                                 <motion.button
                                     key={i}
-                                    whileHover={status === 'active' ? { x: 10, scale: 1.02 } : {}}
-                                    whileTap={status === 'active' ? { scale: 0.98 } : {}}
+                                    whileHover={status === 'active' ? { x: 10, backgroundColor: '#111' } : {}}
                                     onClick={() => handleAnswer(i)}
                                     disabled={status !== 'active'}
                                     className={`
-                                        w-full p-8 text-left rounded-3xl border-2 font-mono text-sm transition-all relative overflow-hidden group
-                                        ${status === 'active' ? 'border-stone-800 text-stone-400 hover:border-white hover:text-white hover:bg-white/5' :
+                                        w-full p-8 text-left rounded-3xl border-2 font-mono text-sm transition-all
+                                        ${status === 'active' ? 'border-stone-800 text-stone-500 hover:border-white hover:text-white' :
                                             i === currentMemory.correct && (status === 'correct' || status === 'shattering' || status === 'exploded') ? 'border-green-500 bg-green-500/10 text-green-400' :
-                                                status === 'exploded' ? 'border-red-900/50 text-stone-700 grayscale opacity-20' :
-                                                    'border-stone-900 text-stone-800 opacity-30'}
+                                                'border-stone-900 text-stone-800 opacity-20'}
                                     `}
                                 >
-                                    <div className="relative z-10 flex items-center justify-between">
-                                        <span className="flex items-center gap-4">
-                                            <span className="text-stone-600 font-sans italic opacity-50">{String.fromCharCode(65 + i)}.</span>
-                                            {option}
+                                    <span className="flex items-center gap-5">
+                                        <span className="w-8 h-8 rounded-full border border-stone-800 flex items-center justify-center text-[10px] text-stone-600 grayscale">
+                                            {String.fromCharCode(65 + i)}
                                         </span>
-                                        {i === currentMemory.correct && status === 'correct' && <CheckCircle className="text-green-500" size={24} />}
-                                    </div>
-                                    {/* Scanline hover effect */}
-                                    {status === 'active' && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />}
+                                        {option}
+                                    </span>
                                 </motion.button>
                             ))}
                         </div>
 
-                        {/* Progress Indicator */}
-                        <div className="mt-8 grid grid-cols-10 gap-2">
+                        <div className="mt-12 grid grid-cols-10 gap-1.5 h-1">
                             {Array.from({ length: 10 }).map((_, i) => (
-                                <div
-                                    key={i}
-                                    className={`h-1.5 rounded-full transition-all duration-500 ${i === currentIdx ? 'bg-white w-full' : i < currentIdx ? 'bg-stone-700' : 'bg-stone-900'}`}
-                                />
+                                <div key={i} className={`rounded-full ${i === currentIdx ? 'bg-red-500' : i < currentIdx ? 'bg-stone-700' : 'bg-stone-900'}`} />
                             ))}
                         </div>
                     </div>
-                </div>
 
-                {/* Footer HUD elements */}
-                <div className="mt-20 flex items-center gap-10 opacity-20">
-                    <span className="text-[10px] font-mono text-white">X-RECOVER_V4.0 // ENCRYPTION: ACTIVE</span>
-                    <div className="flex-grow h-[1px] bg-stone-800" />
-                    <div className="flex gap-6">
-                        <Shield size={14} className="text-white" />
-                        <Volume2 size={14} className="text-white" />
-                        <AlertTriangle size={14} className="text-white" />
-                    </div>
                 </div>
-            </motion.div>
+            </div>
         </div>
     );
 };
