@@ -1,153 +1,270 @@
-import React, { useState, useEffect } from 'react';
-import { Camera, Clipboard, CheckCircle, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Shield, Bomb, CheckCircle, XCircle, Timer, AlertTriangle, Play, Volume2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-const MEMORIES = [
-    { id: 1, text: "Our first coffee date where I spilled latte on my shirt.", img: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=200" },
-    { id: 2, text: "That rainy evening we spent watching trilogies.", img: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&q=80&w=200" },
-    { id: 3, text: "Hiking up the hill to see the sunset.", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=200" },
-    { id: 4, text: "The time we tried to bake a cake and it failed miserably.", img: "https://images.unsplash.com/photo-1550617931-e17a7b70dce2?auto=format&fit=crop&q=80&w=200" },
-    { id: 5, text: "Eating street food at midnight in the cold.", img: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=200" },
-];
+const MEMORY_COUNT = 10;
+const INITIAL_TIME = 120; // 2 minutes
 
 const Day4Challenge = ({ onComplete }) => {
-    const [shuffledMemories, setShuffledMemories] = useState([]);
-    const [shuffledImages, setShuffledImages] = useState([]);
-    const [matches, setMatches] = useState({}); // { imageId: memoryId }
-    const [selectedImageId, setSelectedImageId] = useState(null);
-    const [solved, setSolved] = useState(false);
-    const [error, setError] = useState(false);
+    const [currentIdx, setCurrentIdx] = useState(0);
+    const [timeLeft, setLeft] = useState(INITIAL_TIME);
+    const [score, setScore] = useState(0);
+    const [status, setStatus] = useState('active'); // 'active', 'correct', 'exploded', 'finished'
+    const [isExploding, setIsExploding] = useState(false);
+    const [revealFull, setRevealFull] = useState(false);
 
+    // Initial placeholders - will be updated with user data
+    const [memories, setMemories] = useState(Array.from({ length: 10 }).map((_, i) => ({
+        id: i + 1,
+        cropped: `/assets/day4/cropped/${i + 1}.png`,
+        full: i === 8 ? `/assets/day4/full/${i + 1}.mp4` : `/assets/day4/full/${i + 1}.jpg`, // 9.MP4 identified earlier
+        options: [
+            `Memory ${i + 1} Variation A`,
+            `Memory ${i + 1} Variation B`,
+            `Memory ${i + 1} Variation C`,
+            `Memory ${i + 1} Variation D`
+        ],
+        correct: 0,
+        isTypeVideo: i === 8
+    })));
+
+    // Timer Logic
     useEffect(() => {
-        setShuffledMemories([...MEMORIES].sort(() => Math.random() - 0.5));
-        setShuffledImages([...MEMORIES].sort(() => Math.random() - 0.5));
-    }, []);
+        if (status !== 'active') return;
+        if (timeLeft <= 0) {
+            handleExplode();
+            return;
+        }
+        const timer = setInterval(() => setLeft(prev => prev - 1), 1000);
+        return () => clearInterval(timer);
+    }, [timeLeft, status]);
 
-    const handleSelectImage = (id) => {
-        if (solved) return;
-        setSelectedImageId(id);
-        setError(false);
+    const handleExplode = () => {
+        setStatus('exploded');
+        setIsExploding(true);
+        setRevealFull(true);
+        setTimeout(() => {
+            setIsExploding(false);
+            if (currentIdx < MEMORY_COUNT - 1) {
+                moveToNext();
+            } else {
+                setStatus('finished');
+            }
+        }, 4000);
     };
 
-    const handleSelectMemory = (id) => {
-        if (solved || !selectedImageId) return;
+    const handleAnswer = (choiceIdx) => {
+        if (status !== 'active') return;
 
-        if (selectedImageId === id) {
-            const newMatches = { ...matches, [id]: id };
-            setMatches(newMatches);
-            setSelectedImageId(null);
-            setError(false);
-
-            if (Object.keys(newMatches).length === MEMORIES.length) {
-                handleComplete();
-            }
+        if (choiceIdx === memories[currentIdx].correct) {
+            setScore(prev => prev + 1);
+            setStatus('correct');
+            setRevealFull(true);
+            confetti({
+                particleCount: 80,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#4ade80', '#ffffff']
+            });
+            setTimeout(() => {
+                if (currentIdx < MEMORY_COUNT - 1) {
+                    moveToNext();
+                } else {
+                    setStatus('finished');
+                }
+            }, 4000);
         } else {
-            setError(true);
-            setTimeout(() => setError(false), 500);
+            handleExplode();
         }
     };
 
-    const handleComplete = () => {
-        setSolved(true);
-        confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#3b82f6', '#ffffff', '#60a5fa']
-        });
+    const moveToNext = () => {
+        setCurrentIdx(prev => prev + 1);
+        setLeft(INITIAL_TIME);
+        setStatus('active');
+        setRevealFull(false);
     };
 
-    return (
-        <div className="max-w-3xl mx-auto p-6 bg-gray-900/90 border-2 border-gray-800 rounded-2xl shadow-2xl relative overflow-hidden">
-            <div className="mb-8 text-center">
-                <h2 className="text-2xl font-black text-blue-500 uppercase tracking-tighter flex items-center justify-center gap-2">
-                    Protocol 4: Recall Matrix
-                </h2>
-                <p className="text-gray-400 text-sm mt-2 italic">
-                    "The system is indexing your shared history. Link the visuals to the narrative to restore the data stream."
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const currentMemory = memories[currentIdx];
+
+    if (status === 'finished') {
+        const passed = score >= 8;
+        return (
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="max-w-2xl mx-auto p-12 bg-black border-4 border-stone-800 rounded-[3rem] text-center shadow-[0_0_100px_rgba(255,255,255,0.05)]"
+            >
+                <h2 className="text-5xl font-serif italic text-white mb-6">Recall Synthesis</h2>
+                <div className="text-8xl font-black text-white mb-8 border-y-2 border-stone-800 py-8">
+                    {score}/10
+                </div>
+                <p className="text-stone-400 mb-12 text-lg">
+                    {passed
+                        ? "Neural integrity preserved. Most memories reconstructed successfully."
+                        : "Critical data loss. Your bond is fractured. Retry synthesis?"}
                 </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-8 mb-8">
-                {/* Images Column */}
-                <div className="space-y-4">
-                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest text-center mb-4">Neural Snapshots</h3>
-                    {shuffledImages.map((m) => {
-                        const isMatched = !!matches[m.id];
-                        const isSelected = selectedImageId === m.id;
-
-                        return (
-                            <motion.div
-                                key={m.id}
-                                whileHover={!isMatched ? { scale: 1.02 } : {}}
-                                whileTap={!isMatched ? { scale: 0.98 } : {}}
-                                onClick={() => !isMatched && handleSelectImage(m.id)}
-                                className={`
-                  relative h-24 rounded-lg overflow-hidden border-2 cursor-pointer transition-all
-                  ${isMatched ? 'border-green-500 opacity-50 grayscale' : isSelected ? 'border-blue-500 ring-2 ring-blue-500/50' : 'border-gray-800 hover:border-gray-600'}
-                `}
-                            >
-                                <img src={m.img} alt="Memory" className="w-full h-full object-cover" />
-                                {isMatched && <CheckCircle className="absolute top-2 right-2 text-green-500 shadow-black" size={24} />}
-                            </motion.div>
-                        );
-                    })}
-                </div>
-
-                {/* Text Column */}
-                <div className="space-y-4">
-                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest text-center mb-4">Data Logs</h3>
-                    {shuffledMemories.map((m) => {
-                        const isMatched = Object.values(matches).includes(m.id);
-
-                        return (
-                            <motion.div
-                                key={m.id}
-                                whileHover={!isMatched && selectedImageId ? { backgroundColor: 'rgba(59, 130, 246, 0.1)' } : {}}
-                                onClick={() => handleSelectMemory(m.id)}
-                                className={`
-                  h-24 p-3 flex items-center justify-center text-center text-xs font-medium rounded-lg border-2 transition-all
-                  ${isMatched ? 'border-green-500 bg-green-900/10 text-green-400 opacity-50' : selectedImageId ? 'border-blue-900/50 cursor-pointer hover:border-blue-600' : 'border-gray-800 text-gray-400'}
-                  ${error && selectedImageId ? 'border-red-600 animate-pulse' : ''}
-                `}
-                            >
-                                {m.text}
-                            </motion.div>
-                        );
-                    })}
-                </div>
-            </div>
-
-            <AnimatePresence>
-                {solved ? (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="p-6 bg-green-500/20 border border-green-500 rounded-lg text-center"
+                {passed ? (
+                    <button
+                        onClick={onComplete}
+                        className="w-full py-6 bg-white text-black font-black uppercase tracking-[0.3em] rounded-full hover:bg-stone-200 transition-all"
                     >
-                        <div className="text-green-400 font-bold mb-4 uppercase tracking-widest">DATA INTEGRITY RESTORED</div>
-                        <button
-                            onClick={onComplete}
-                            className="w-full py-4 bg-green-600 text-black font-black rounded hover:bg-green-400 transition-all uppercase"
-                        >
-                            UPGRADE PERMISSIONS & NEXT PROTOCOL
-                        </button>
-                    </motion.div>
+                        Initialize Protocol 05
+                    </button>
                 ) : (
-                    <div className="text-center">
-                        {error && (
-                            <div className="text-red-500 text-xs mb-4 flex items-center justify-center gap-2 animate-bounce">
-                                <AlertCircle size={14} />
-                                <span>MISMATCH DETECTED. RE-EVALUATING MEMORY...</span>
-                            </div>
-                        )}
-                        <p className="text-[10px] text-gray-600 font-mono italic">
-              // Click a snapshot first, then find its matching log entry.
-                        </p>
-                    </div>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="w-full py-6 bg-red-600 text-white font-black uppercase tracking-[0.3em] rounded-full hover:bg-red-500 transition-all"
+                    >
+                        Retry Matrix Upload
+                    </button>
+                )}
+            </motion.div>
+        );
+    }
+
+    return (
+        <div className="relative min-h-[800px] flex items-center justify-center p-4">
+            {/* Explosion Flash Overlay */}
+            <AnimatePresence>
+                {isExploding && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[200] bg-white pointer-events-none"
+                    />
                 )}
             </AnimatePresence>
+
+            {/* Main Cyberpunk Console */}
+            <motion.div
+                animate={isExploding ? { x: [-10, 10, -10, 10, 0], transition: { duration: 0.1, repeat: 5 } } : {}}
+                className="w-full max-w-4xl bg-[#0a0a0a] border-2 border-stone-800 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden"
+            >
+                {/* HUD Header */}
+                <div className="flex justify-between items-center mb-8 border-b border-stone-800 pb-6">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] text-stone-500 font-black uppercase tracking-widest">Protocol 04 // Recall Matrix</span>
+                        <span className="text-white font-mono text-xl">Memory Segment {currentIdx + 1}/10</span>
+                    </div>
+
+                    <div className={`
+                        px-6 py-3 rounded-xl border-2 font-mono text-2xl font-black flex items-center gap-3 transition-colors
+                        ${status === 'correct' ? 'border-green-500 text-green-500 bg-green-500/10' :
+                            status === 'exploded' ? 'border-red-500 text-red-500 bg-red-500/10' :
+                                timeLeft < 30 ? 'border-red-600 text-red-600 animate-pulse' : 'border-stone-700 text-white'}
+                    `}>
+                        <Timer className={timeLeft < 30 ? 'animate-spin-slow' : ''} />
+                        {status === 'correct' ? "DISARMED" : status === 'exploded' ? 'DETONATED' : formatTime(timeLeft)}
+                    </div>
+                </div>
+
+                {/* Main Visual Core */}
+                <div className="grid md:grid-cols-2 gap-12 items-center">
+                    {/* The "Bomb" Image Container */}
+                    <div className="relative aspect-square md:aspect-[4/5] bg-stone-900 rounded-[2rem] overflow-hidden border-2 border-stone-800 group group-hover:border-stone-700 transition-colors">
+                        <div className="absolute inset-0 z-10 pointer-events-none border-[20px] border-black/40" />
+
+                        {currentMemory.isTypeVideo && revealFull ? (
+                            <video
+                                src={currentMemory.full}
+                                autoPlay
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <motion.img
+                                key={currentIdx}
+                                initial={false}
+                                animate={{
+                                    scale: revealFull ? 1 : 1, // Full image is already sized
+                                    filter: status === 'exploded' ? 'grayscale(1) brightness(0.2)' : 'none'
+                                }}
+                                src={revealFull ? currentMemory.full : currentMemory.cropped}
+                                alt="Memory Core"
+                                className="w-full h-full object-cover"
+                            />
+                        )}
+
+                        {/* Status Overlays */}
+                        <AnimatePresence>
+                            {status === 'correct' && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="absolute inset-x-0 bottom-0 bg-green-500 py-4 text-black font-black uppercase text-center tracking-widest z-20"
+                                >
+                                    MEMORY SAVED
+                                </motion.div>
+                            )}
+                            {status === 'exploded' && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="absolute inset-x-0 bottom-0 bg-red-600 py-4 text-white font-black uppercase text-center tracking-widest z-20"
+                                >
+                                    MEMORY DESTROYED
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
+                    {/* Options Console */}
+                    <div className="flex flex-col gap-4">
+                        <div className="mb-4">
+                            <h3 className="text-stone-500 text-[10px] font-black uppercase tracking-[0.3em] mb-2 text-center md:text-left">Select Neural Key</h3>
+                            <div className="h-1 w-full bg-stone-900 rounded-full overflow-hidden">
+                                <motion.div
+                                    className="h-full bg-stone-500"
+                                    animate={{ width: `${(currentIdx / 10) * 100}%` }}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            {currentMemory.options.map((option, i) => (
+                                <motion.button
+                                    key={i}
+                                    whileHover={status === 'active' ? { x: 5, backgroundColor: '#1a1a1a' } : {}}
+                                    whileTap={status === 'active' ? { scale: 0.98 } : {}}
+                                    onClick={() => handleAnswer(i)}
+                                    disabled={status !== 'active'}
+                                    className={`
+                                        w-full p-6 text-left rounded-2xl border-2 font-medium transition-all relative overflow-hidden group
+                                        ${status === 'active' ? 'border-stone-800 text-stone-400 hover:border-stone-500 hover:text-white' :
+                                            i === currentMemory.correct && status === 'correct' ? 'border-green-500 bg-green-500/10 text-green-400' :
+                                                i === currentMemory.correct && status === 'exploded' ? 'border-green-500/40 text-green-500/40' :
+                                                    'border-stone-900 text-stone-700 opacity-50'}
+                                    `}
+                                >
+                                    <span className="relative z-10 flex items-center justify-between">
+                                        {option}
+                                        {i === currentMemory.correct && status === 'correct' && <CheckCircle size={18} />}
+                                    </span>
+                                </motion.button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Scanned Artifact Info */}
+                <div className="mt-12 flex items-center gap-6 opacity-30">
+                    <div className="flex-grow h-[1px] bg-stone-800" />
+                    <div className="flex gap-4">
+                        <Shield className="w-4 h-4 text-stone-500" />
+                        <Volume2 className="w-4 h-4 text-stone-500" />
+                        <AlertTriangle className="w-4 h-4 text-stone-500" />
+                    </div>
+                    <div className="flex-grow h-[1px] bg-stone-800" />
+                </div>
+            </motion.div>
         </div>
     );
 };
