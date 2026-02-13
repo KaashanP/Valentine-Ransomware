@@ -47,6 +47,7 @@ const Day5Challenge = ({ onComplete }) => {
         if (status === 'montage') {
             // Attempt to play audio explicitly
             if (audioRef.current) {
+                audioRef.current.volume = 0.3; // 70% quieter
                 audioRef.current.play().catch(err => {
                     console.log("Autoplay blocked, waiting for interaction:", err);
                 });

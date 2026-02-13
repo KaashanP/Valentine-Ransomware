@@ -22,7 +22,10 @@ const App = () => {
 
     const diffTime = today - startDate;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-    const maxAvailableDay = Math.min(6, Math.max(1, diffDays));
+
+    // LOCALHOST BYPASS: Unlock all days for local testing
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const maxAvailableDay = isLocalhost ? 6 : Math.min(6, Math.max(1, diffDays));
 
     const savedDay = localStorage.getItem('valentine_ransomware_day');
     const savedReadyStatus = localStorage.getItem('valentine_ransomware_started');
@@ -30,7 +33,7 @@ const App = () => {
     if (savedDay) {
       setUnlockedDay(Math.min(parseInt(savedDay), maxAvailableDay));
     } else {
-      setUnlockedDay(1);
+      setUnlockedDay(isLocalhost ? 6 : 1);
     }
 
     if (savedReadyStatus) {

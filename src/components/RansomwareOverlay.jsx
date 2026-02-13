@@ -113,7 +113,8 @@ const RansomwareOverlay = ({ unlockedDay, onStartChallenge, readyState, setReady
                             const startDate = new Date('2026-02-09T00:00:00');
                             const challengeDate = new Date(startDate);
                             challengeDate.setDate(startDate.getDate() + (day - 1));
-                            const isPastOrToday = new Date() >= challengeDate;
+                            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                            const isPastOrToday = isLocal || new Date() >= challengeDate;
                             const isActuallyUnlocked = isUnlocked && isPastOrToday;
 
                             return (
