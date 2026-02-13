@@ -196,6 +196,24 @@ const Day6Challenge = () => {
                     <h1 className="text-7xl md:text-8xl font-black text-white mb-6 tracking-tighter leading-none">
                         I KNEW IT! <span className="text-pink-500">❤️</span>
                     </h1>
+
+                    {/* The Couple Photo */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 40, scale: 0.8 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ delay: 1, duration: 1.5, type: 'spring', damping: 15 }}
+                        className="mb-12"
+                    >
+                        <div className="relative mx-auto max-w-sm rounded-[2rem] overflow-hidden border-4 border-white/20 shadow-[0_0_80px_rgba(236,72,153,0.3)] rotate-[-2deg] hover:rotate-0 transition-transform duration-700">
+                            <img
+                                src="/assets/day6_final.jpg"
+                                alt="Us"
+                                className="w-full h-auto object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
+                        </div>
+                    </motion.div>
+
                     <p className="text-2xl md:text-3xl text-pink-300 font-serif italic mb-16 leading-relaxed">
                         The ransomware has been deactivated. <br />My heart is now permanently yours.
                     </p>
