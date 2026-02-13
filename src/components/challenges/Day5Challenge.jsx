@@ -249,10 +249,16 @@ const Day5Challenge = ({ onComplete }) => {
 
                     {/* Camera Feed */}
                     <div className="absolute inset-0 flex items-center justify-center">
-                        {streamActive ? (
-                            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover -scale-x-100" />
-                        ) : (
-                            <div className="flex flex-col items-center gap-6 text-stone-800">
+                        <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            className={`w-full h-full object-cover -scale-x-100 transition-opacity duration-700 ${streamActive ? 'opacity-100' : 'opacity-0'}`}
+                        />
+
+                        {!streamActive && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 text-stone-800 bg-[#0a0a0a]">
                                 <RefreshCw className="w-16 h-16 animate-spin-slow opacity-20" />
                                 <p className="text-[10px] uppercase tracking-[0.5em] font-black">Camera Initializing...</p>
                             </div>
