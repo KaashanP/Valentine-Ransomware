@@ -24,12 +24,15 @@ const Day5Challenge = ({ onComplete }) => {
     const [montageIdx, setMontageIdx] = useState(0);
     const [isMuted, setIsMuted] = useState(false);
 
+    const [audioReady, setAudioReady] = useState(false);
+
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const audioRef = useRef(null);
 
-    // Romantic Background Music (User-provided asset)
-    const ROMANTIC_MUSIC = "/assets/day5_bgm.mp3";
+    // The track: "B Young - Catch Me Outside (Official Video)"
+    // Renamed to a clean slug for the production build
+    const B_YOUNG_MONTAGE_MUSIC = "/assets/day5_bgm.mp3";
 
     useEffect(() => {
         if (status === 'capturing') {
@@ -42,12 +45,19 @@ const Day5Challenge = ({ onComplete }) => {
 
     useEffect(() => {
         if (status === 'montage') {
+            // Attempt to play audio explicitly
+            if (audioRef.current) {
+                audioRef.current.play().catch(err => {
+                    console.log("Autoplay blocked, waiting for interaction:", err);
+                });
+            }
+
             const timer = setInterval(() => {
                 setMontageIdx(prev => {
                     if (prev < POSES.length - 1) return prev + 1;
-                    return prev; // Stay on last image or loop? User said finish Day 5.
+                    return prev;
                 });
-            }, 15000); // 15 seconds per image per user request
+            }, 15000);
             return () => clearInterval(timer);
         }
     }, [status]);
@@ -165,7 +175,36 @@ const Day5Challenge = ({ onComplete }) => {
         const isDone = montageIdx === POSES.length - 1;
         return (
             <div className="fixed inset-0 z-[1000] bg-black flex flex-col items-center justify-center p-4">
-                <audio ref={audioRef} src={ROMANTIC_MUSIC} autoPlay loop muted={isMuted} />
+                <audio
+                    ref={audioRef}
+                    src={B_YOUNG_MONTAGE_MUSIC}
+                    autoPlay
+                    loop
+                    onCanPlay={() => setAudioReady(true)}
+                />
+
+                <AnimatePresence>
+                    {!isMuted && audioRef.current?.paused && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="absolute inset-0 z-[1100] bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center text-center p-12"
+                        >
+                            <Heart className="text-pink-500 w-16 h-16 mb-8 animate-pulse shadow-[0_0_30px_rgba(236,72,153,0.5)]" />
+                            <h2 className="text-4xl font-serif italic text-white mb-6">"Catch Me Outside"</h2>
+                            <p className="text-stone-400 mb-12 uppercase tracking-[0.3em] text-xs">Tap to begin the narration montage</p>
+                            <button
+                                onClick={() => {
+                                    audioRef.current.play();
+                                    setIsMuted(false);
+                                }}
+                                className="bg-white text-black px-12 py-5 rounded-full font-black uppercase tracking-[0.4em] hover:scale-105 transition-all shadow-2xl"
+                            >
+                                Start Experience
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 <div className="absolute top-10 flex justify-between w-full px-12 items-center">
                     <div className="text-stone-500 uppercase tracking-[0.6em] text-[10px] font-black">Archive Playback: Emotional Sync</div>
