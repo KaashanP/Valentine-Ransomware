@@ -54,51 +54,74 @@ const Day5Challenge = ({ onComplete }) => {
 
     const startCamera = async () => {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'user', width: { ideal: 1080 }, height: { ideal: 1080 } }
-            });
+            // Stop any existing stream before starting new one
+            stopCamera();
+
+            const constraints = {
+                video: {
+                    facingMode: 'user',
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                }
+            };
+
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
-                setStreamActive(true);
+                // We don't setStreamActive here; we wait for the video to actually start playing
             }
         } catch (err) {
-            console.error("Camera Error:", err);
+            console.error("Camera Access Error:", err);
+            // In a production environment, we should notify the user that camera access is required
             setStreamActive(false);
         }
     };
 
     const stopCamera = () => {
         if (videoRef.current && videoRef.current.srcObject) {
-            videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+            const stream = videoRef.current.srcObject;
+            const tracks = stream.getTracks();
+            tracks.forEach(track => {
+                track.stop();
+                stream.removeTrack(track);
+            });
+            videoRef.current.srcObject = null;
         }
+        setStreamActive(false);
     };
 
     const capturePhoto = () => {
+        if (!streamActive) return; // Prevent capture if camera isn't actually showing something
+
         if (canvasRef.current && videoRef.current) {
             const context = canvasRef.current.getContext('2d');
-            canvasRef.current.width = videoRef.current.videoWidth;
-            canvasRef.current.height = videoRef.current.videoHeight;
+
+            // Get actual video dimensions
+            const videoWidth = videoRef.current.videoWidth;
+            const videoHeight = videoRef.current.videoHeight;
+
+            canvasRef.current.width = videoWidth;
+            canvasRef.current.height = videoHeight;
 
             // Mirror flip for natural selfie feel
             context.save();
             context.scale(-1, 1);
-            context.drawImage(videoRef.current, -canvasRef.current.width, 0);
+            context.drawImage(videoRef.current, -videoWidth, 0, videoWidth, videoHeight);
             context.restore();
 
-            const dataUrl = canvasRef.current.toDataURL('image/jpeg', 0.8);
+            const dataUrl = canvasRef.current.toDataURL('image/jpeg', 0.9);
             const newPhotos = [...capturedPhotos, dataUrl];
             setCapturedPhotos(newPhotos);
 
-            if (currentStep < POSES.length - 1) {
-                setCurrentStep(prev => prev + 1);
-            } else {
-                setStatus('synthesizing');
-                setTimeout(() => setStatus('montage'), 4000);
-            }
-        } else {
-            // Fallback for no camera
-            const newPhotos = [...capturedPhotos, `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentStep}`];
-            setCapturedPhotos(newPhotos);
+            // Shutter Flash Feedback
+            const flash = document.createElement('div');
+            flash.className = 'fixed inset-0 bg-white z-[2000] pointer-events-none opacity-100 transition-opacity duration-300';
+            document.body.appendChild(flash);
+            setTimeout(() => {
+                flash.style.opacity = '0';
+                setTimeout(() => document.body.removeChild(flash), 300);
+            }, 50);
+
             if (currentStep < POSES.length - 1) {
                 setCurrentStep(prev => prev + 1);
             } else {
@@ -166,20 +189,9 @@ const Day5Challenge = ({ onComplete }) => {
                         </motion.div>
                     </AnimatePresence>
 
-                    {/* Content Overlay */}
-                    <div className="absolute bottom-16 left-16 right-16">
-                        <motion.div
-                            key={`text-${montageIdx}`}
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.5, duration: 1.5 }}
-                            className="space-y-6"
-                        >
-                            <h3 className="text-pink-400 font-mono text-sm tracking-[0.5em] uppercase">{POSES[montageIdx].context}</h3>
-                            <p className="text-4xl md:text-6xl font-serif italic text-white leading-tight max-w-3xl">
-                                {POSES[montageIdx].instruction}
-                            </p>
-                        </motion.div>
+                    {/* Clean Montage - No text overlays as per user request for live narration */}
+                    <div className="absolute inset-0 pointer-events-none">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
                     </div>
 
                     {/* Progress Bar */}
@@ -254,6 +266,7 @@ const Day5Challenge = ({ onComplete }) => {
                             autoPlay
                             playsInline
                             muted
+                            onPlaying={() => setStreamActive(true)}
                             className={`w-full h-full object-cover -scale-x-100 transition-opacity duration-700 ${streamActive ? 'opacity-100' : 'opacity-0'}`}
                         />
 
