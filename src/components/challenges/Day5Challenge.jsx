@@ -28,8 +28,8 @@ const Day5Challenge = ({ onComplete }) => {
     const canvasRef = useRef(null);
     const audioRef = useRef(null);
 
-    // Initial Montage Audio (Romantic Placeholder - should be replaced by real asset)
-    const ROMANTIC_MUSIC = "https://cdn.pixabay.com/audio/2022/05/27/audio_1808f3030e.mp3"; // Instrumental romance
+    // Romantic Background Music (User-provided asset)
+    const ROMANTIC_MUSIC = "/assets/day5_bgm.mp3";
 
     useEffect(() => {
         if (status === 'capturing') {
@@ -47,7 +47,7 @@ const Day5Challenge = ({ onComplete }) => {
                     if (prev < POSES.length - 1) return prev + 1;
                     return prev; // Stay on last image or loop? User said finish Day 5.
                 });
-            }, 10000); // 10 seconds per image per user request
+            }, 15000); // 15 seconds per image per user request
             return () => clearInterval(timer);
         }
     }, [status]);
@@ -200,7 +200,7 @@ const Day5Challenge = ({ onComplete }) => {
                             key={`bar-${montageIdx}`}
                             initial={{ width: 0 }}
                             animate={{ width: "100%" }}
-                            transition={{ duration: 10, ease: "linear" }}
+                            transition={{ duration: 15, ease: "linear" }}
                             className="h-full bg-pink-500"
                         />
                     </div>
